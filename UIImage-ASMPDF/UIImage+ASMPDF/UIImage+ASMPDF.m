@@ -183,6 +183,8 @@ static NSString* ASMPDFCacheTypeKey = @"com.amolloy.ASMPDFCacheType";
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
 		sMemoryCache = [[NSCache alloc] init];
+        [sMemoryCache setTotalCostLimit:25 * 1024 * 1024]; // byte
+        [[NSNotificationCenter defaultCenter] addObserver:sMemoryCache selector:@selector(removeAllObjects) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
 	});
 	
 	return sMemoryCache;
@@ -251,11 +253,14 @@ static NSString* ASMPDFCacheTypeKey = @"com.amolloy.ASMPDFCacheType";
 									   opaque:opaque
 										scale:scale
 									 cropRect:cropRect];
+    
+    NSData *PNGRepresentationData = UIImagePNGRepresentation(self);
 	
 	if (ASMPDFMemoryCache & cacheType)
 	{
 		[[self memoryCache] setObject:self
-							   forKey:cacheKey];
+							   forKey:cacheKey
+                                 cost:[PNGRepresentationData length]];
 	}
 	if (ASMPDFDiskCache & cacheType)
 	{
@@ -269,7 +274,7 @@ static NSString* ASMPDFCacheTypeKey = @"com.amolloy.ASMPDFCacheType";
 
 		cachedImagePath = [cachedImagePath stringByAppendingPathExtension:@"png"];
 		
-		[UIImagePNGRepresentation(self) writeToFile:cachedImagePath atomically:YES];
+		[PNGRepresentationData writeToFile:cachedImagePath atomically:YES];
 	}
 }
 
