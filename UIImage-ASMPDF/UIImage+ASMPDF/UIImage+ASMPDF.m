@@ -183,8 +183,12 @@ static NSString* ASMPDFCacheTypeKey = @"com.amolloy.ASMPDFCacheType";
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
 		sMemoryCache = [[NSCache alloc] init];
-        [sMemoryCache setTotalCostLimit:25 * 1024 * 1024]; // byte
-        [[NSNotificationCenter defaultCenter] addObserver:sMemoryCache selector:@selector(removeAllObjects) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationDidReceiveMemoryWarningNotification
+                                                          object:nil
+                                                           queue:[NSOperationQueue mainQueue]
+                                                      usingBlock:^(NSNotification *note) {
+                                                          [sMemoryCache removeAllObjects];
+                                                      }];
 	});
 	
 	return sMemoryCache;
